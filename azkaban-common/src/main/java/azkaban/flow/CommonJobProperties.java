@@ -61,6 +61,11 @@ public class CommonJobProperties {
    */
   public static final String FAILURE_EMAILS = "failure.emails";
 
+  /**
+   * Option for allow failure of job
+   */
+  public static final String ALLOW_FAILURE = "allow.failure";
+
   /*
    * The following are the common props that will be added to the job by azkaban
    */

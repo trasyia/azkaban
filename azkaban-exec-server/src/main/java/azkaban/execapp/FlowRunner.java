@@ -42,6 +42,7 @@ import azkaban.executor.ExecutionOptions.FailureAction;
 import azkaban.executor.ExecutorLoader;
 import azkaban.executor.ExecutorManagerException;
 import azkaban.executor.Status;
+import azkaban.flow.CommonJobProperties;
 import azkaban.flow.ConditionOnJobStatus;
 import azkaban.flow.FlowProps;
 import azkaban.flow.FlowUtils;
@@ -519,6 +520,8 @@ public class FlowRunner extends EventHandler implements Runnable {
 
   private void setFlowFailed(final ExecutableNode node) {
     boolean shouldFail = true;
+    boolean allowFailure = node.getInputProps().getBoolean(CommonJobProperties.ALLOW_FAILURE, false);
+
     // As long as there is no outNodes or at least one outNode has conditionOnJobStatus of
     // ALL_SUCCESS, we should set the flow to failed. Otherwise, it could still statisfy the
     // condition of conditional workflows, so don't set the flow to failed.
@@ -532,13 +535,15 @@ public class FlowRunner extends EventHandler implements Runnable {
       }
     }
 
-    if (shouldFail) {
-      propagateStatus(node.getParentFlow(),
-          node.getStatus() == Status.KILLED ? Status.KILLED : Status.FAILED_FINISHING);
-      if (this.failureAction == FailureAction.CANCEL_ALL) {
-        this.kill();
+    if (!allowFailure) {
+      if (shouldFail) {
+        propagateStatus(node.getParentFlow(),
+                node.getStatus() == Status.KILLED ? Status.KILLED : Status.FAILED_FINISHING);
+        if (this.failureAction == FailureAction.CANCEL_ALL) {
+          this.kill();
+        }
+        this.flowFailed = true;
       }
-      this.flowFailed = true;
     }
   }
 
